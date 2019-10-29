@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- 引入外部样式 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='el/lib/theme-chalk/index.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/clip.ico') }}"/>
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+    </style>
+    <title>关于 | HUSTPORT</title>
+</head>
+<body>
+    <div id="app" v-cloak>
+        <p id="logo"><a href="{{ url_for('home') }}">HUSTPORT</a></p>
+        <!-- 关于网站的基本信息和使用方法 -->
+        <div class="template" id="about">
+            <p style="font-size: 24px; color: #2c3e50; padding-bottom: 20px; font-family: baskerville, 'Times New Roman', Times, serif;">ABOUT&nbsp;&nbsp;US</p>
+            <p style="color: #2c3e50; line-height: 28px; padding: 0 20px;">
+                HUSTPORT 是华中科技大学计算机学院计科校交1701班 Hustport 组软件工程课设作品，用以满足学习委员收集电子版文件并整合发送邮件的需求。<br>
+            </p>
+            <p style="color: #2c3e50; line-height: 28px; padding: 0 20px;">
+                整站基于 Flask 和 Vue.js 创建，调用了基于 Vue 的 UI 框架 Element-UI。项目部署在腾讯云上，官方访问域名为 www.hustport.com，点击下面图片即可访问我们位于 GitHub 的项目主页。
+            </p>
+            <a href="https://github.com/Hustport/HUSTPORT" target="_blank"><img src="https://github.blog/wp-content/uploads/2013/04/074d0b06-a5e3-11e2-8b7f-9f09eb2ddfae.jpg" alt="GitHub Logo" style="height: 40%; width: 40%; margin-left: 30%;"></a>
+            <p style="color: #2c3e50; line-height: 28px; padding: 0 20px;">如果您在使用中遇到任何问题，欢迎通过邮件联系我们： hustport@yeah.net 。</p>
+        </div>
+    </div>
+    <div class="footer">
+        <p style="color: #666">&copy; 2019 HUSTPORT | <a href="{{ url_for('about') }}">ABOUT US</a></p>
+    </div>
+</body>
+<!-- 引入外部脚本 -->
+<script src="{{ url_for('static', filename='js/vue.js') }}"></script>
+<script src="{{ url_for('static', filename='js/index.js') }}"></script>
+<script src="{{ url_for('static', filename='js/axios.min.js') }}"></script>
+<script>
+    new Vue({
+      el: '#app',
+      data: function() {
+          return {
+          }
+      },
+      methods: {
+      }
+    })
+</script>
+</html>

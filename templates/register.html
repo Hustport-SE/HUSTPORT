@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <!-- 引入外部样式 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='el/lib/theme-chalk/index.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/clip.ico') }}" />
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+    </style>
+    <title>注册 | Hustport</title>
+</head>
+
+<body>
+    <div id="app" v-cloak>
+        <p id="logo"><a href="{{ url_for('home') }}">HUSTPORT</a></p>
+        <!-- 注册表格 -->
+        <el-form ref="form" :model="form" :rules="rules" label-width="80px" size="medium" id="register" label-position="left" status-icon>
+            <el-form-item label="学号" prop="studentId">
+                <el-col :span="20">
+                    <el-input v-model="form.studentId"></el-input>
+                </el-col>
+            </el-form-item>
+            <el-form-item label="密码" prop="pass">
+                <el-col :span="20">
+                    <el-input v-model="form.pass" type='Password'></el-input>
+                </el-col>
+            </el-form-item>
+            <el-form-item label="确认密码" prop="checkPass">
+                <el-col :span="20">
+                    <el-input v-model="form.checkPass" type='Password'></el-input>
+                </el-col>
+            </el-form-item>
+            <el-form-item label="姓名" prop="name">
+                <el-col :span="20">
+                    <el-input v-model="form.name"></el-input>
+                </el-col>
+            </el-form-item>
+            <el-form-item label="邮箱" prop="mail">
+                <el-col :span="20">
+                    <el-input v-model="form.mail"></el-input>
+                </el-col>
+            </el-form-item>
+            <el-popover id="registerInfo" placement="top-start" width="100" trigger="hover" content="我们将用姓名和学号对文件进行统一命名，并通过邮件通知您。">
+                <el-link type="primary" slot="reference"><i class="el-icon-info"></i>&nbsp;我们为什么需要您的信息?</el-link>
+            </el-popover>
+            <el-form-item style="margin-top: 23px">
+                <el-button type="primary" @click="handleResgister('form')">注册</el-button>
+                <el-button plain @click="handleLogin">返回登录</el-button>
+            </el-form-item>
+        </el-form>
+    </div>
+    <div class="footer">
+        <p style="color: #666">&copy; 2019 HUSTPORT | <a href="{{ url_for('about') }}">ABOUT US</a></p>
+    </div>
+</body>
+<!-- 引入外部脚本 -->
+<script src="{{ url_for('static', filename='js/vue.js') }}"></script>
+<script src="{{ url_for('static', filename='js/index.js') }}"></script>
+<script src="{{ url_for('static', filename='js/axios.min.js') }}"></script>
+<script>
+    new Vue({
+        el: '#app',
+        data: function() {
+            var validatePass = (rule, value, callback) => {
+                if (value === '') {
+                    callback(new Error('请输入密码'));
+                } else {
+                    if (this.form.checkPass !== '') {
+                        this.$refs.form.validateField('checkPass');
+                    }
+                    callback();
+                }
+            };
+            var validatePass2 = (rule, value, callback) => {
+                if (value === '') {
+                    callback(new Error('请再次输入密码'));
+                } else if (value !== this.form.pass) {
+                    callback(new Error('两次输入密码不一致!'));
+                } else {
+                    callback();
+                }
+            };
+            return {
+                form: {
+                    studentId: '',
+                    pass: '',
+                    checkPass: '',
+                    name: '',
+                    mail: ''
+                },
+                rules: { //表单填写的验证函数
+                    studentId: [{
+                        required: true,
+                        message: "请输入学号",
+                        trigger: 'blur'
+                    }, {
+                        min: 10,
+                        max: 10,
+                        message: '学号长度为 10 个字符',
+                        trigger: 'blur'
+                    }],
+                    pass: [{
+                        required: true,
+                        message: "请输入密码",
+                        trigger: 'blur'
+                    }, {
+                        validator: validatePass,
+                        trigger: 'blur'
+                    }],
+                    checkPass: [{
+                        required: true,
+                        message: "请确认密码",
+                        trigger: 'blur'
+                    }, {
+                        validator: validatePass2,
+                        trigger: 'blur'
+                    }],
+                    name: [{
+                        required: true,
+                        message: "请输入姓名",
+                        trigger: 'blur'
+                    }, {
+                        min: 2,
+                        max: 5,
+                        message: '姓名长度为 2 到 5 个字符',
+                        trigger: 'blur'
+                    }],
+                    mail: [{
+                        required: true,
+                        message: '请输入邮箱地址',
+                        trigger: 'blur'
+                    }, {
+                        type: 'email',
+                        message: '请输入正确的邮箱地址',
+                        trigger: ['blur', 'change']
+                    }]
+                }
+            }
+        },
+        methods: {
+            handleResgister: function(formName) {
+                var isValidated = false;
+                this.$refs[formName].validate((valid) => {
+                    if (valid) {
+                        isValidated = true;
+                    } else {
+                        console.log('error submit!!');
+                        return false;
+                    }
+                });
+                if (isValidated == false) return false; //没经过验证则结束函数的执行
+                axios({
+                    method: 'post',
+                    url: "{{ url_for('api_users') }}",
+                    timeout: 5000,
+                    data: {
+                        studentId: this.form.studentId,
+                        password: this.form.pass,
+                        name: this.form.name,
+                        mail: this.form.mail
+                    }
+                }).then(res => {
+                    status = parseInt(res["status"]);
+                    if (status == 201) { //stuid 重复
+                        this.$message.error('此学号已经被注册，请直接登陆');
+                    } else if (status == 203) { //mailaddr 重复
+                        this.$message.error('此邮箱已经被注册，换一个邮箱试试');
+                    } else if (status == 202) {
+                        this.$message({
+                            message: '恭喜你注册成功！即将跳转至登录页…',
+                            type: 'success'
+                        });
+                        setTimeout(function() {
+                            window.location.href = "{{ url_for('index') }}"
+                        }, 3000);
+                    }
+                });
+            },
+            handleLogin: function() {
+                window.location.href = "{{ url_for('index') }}";
+            }
+        }
+    })
+</script>
+
+</html>

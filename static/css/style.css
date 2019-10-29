@@ -1,0 +1,197 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#logo {
+    font-family: baskerville, 'Times New Roman', Times, serif;
+    font-size: 30px;
+    margin-left: 72px;
+    margin-top: 54px;
+}
+#logo a {
+    color:#2c3e50 ;
+    text-decoration:none;
+}
+#logo a:hover {
+    color:#2c3e50b6 ;
+    text-decoration:none;
+}
+#loginlogo {
+    font-family: baskerville, 'Times New Roman', Times, serif;
+    font-size: 38px;
+    margin-left: 92px;
+    margin-top: 72px;
+}
+#loginlogo a {
+    color:#ffffff ;
+    text-decoration:none;
+}
+#loginlogo a:hover {
+    color:#eeeeee ;
+    text-decoration:none;
+}
+
+.footer {
+    position:relative ;
+    bottom: 0%;
+    left: 50%;
+    margin: 50px 0 0 -120px;
+    width: 240px;
+    height: 54px;
+}
+.footer p {
+    font-family: 'Times New Roman', Times, serif;
+}
+.footer a {
+    color: #409eff;
+    text-decoration: none;
+}
+.footer a:hover {
+    text-decoration: underline;
+}
+.loginfooter {
+    position: absolute;
+    bottom: 5%;
+    left: 50%;
+    margin: 50px 0 0 -130px;
+    width: 260px;
+    height: 54px;
+}
+.loginfooter p {
+    font-family: 'Times New Roman', Times, serif;
+}
+.loginfooter a {
+    color: #ffffff;
+    text-decoration: none;
+}
+.loginfooter a:hover {
+    color: #eeeeee;
+}
+
+#login {
+    position: absolute;
+    /* left: 50%; */
+    margin: 15% 0 0 20%;
+    /* margin: 30px 0 0 -32%;
+    padding: 15% 15% 11% 15%; */
+    width: 60%;
+}
+#login .el-input--medium .el-input__inner {
+    height: 48px;
+}
+#login .el-input__inner {
+    border-radius: 10px;
+}
+#login .el-form-item__label {
+    font-size: 16px;
+    color: white;
+    padding: 7px 14px 0 0;
+}
+
+#login .el-button {
+    padding: 14px 30px;
+    font-size: 16px;
+    border-radius: 10px;
+}
+/* #login .el-button--primary {
+    color: #FFF;
+    background-color: rgb(86, 170, 255);
+    border-color: #409EFF;
+} */
+
+/* #registerButtonText {
+    text-decoration: none;
+    color: #333;
+}
+
+#registerButton:hover {
+    color: #409eff;
+} */
+#registerButton {
+    position: absolute;
+    margin-top: -5%;
+    margin-left: 86%;
+}
+/* #registerButton .el-button {
+    padding: 12px 26px;
+    font-size: 14px;
+    border-radius: 10px;
+    color: #999999;
+}
+#registerButton .el-button:hover {
+    color: #409eff;
+} */
+#registerButton a {
+    text-decoration: none;
+    color: white;
+    font-size: 17px;
+}
+#registerButton a:hover {
+    color: #eeeeee;
+}
+
+#register {
+    position: relative;
+    left: 50%;
+    margin: 36px 0 0 -32%;
+    padding: 6% 13% 3% 15%;
+    border: 1px solid #eeeeee;
+    border-radius: 5px;
+    width: 36%;
+}
+
+#register .el-button--medium {
+    padding: 15px 48px;
+    font-size: 14px;
+    border-radius: 4px;
+}
+#registerInfo {
+    margin-left: 80px;
+}
+
+.template {
+    position: relative;
+    left: 50%;
+    margin: 42px 0 0 -34%;
+    padding: 3% 6% 3% 6%;
+    border: 1px solid #eeeeee;
+    border-radius: 5px;
+    width: 55%;
+}
+
+.settingDialog .el-form-item__label {
+    padding: 2px 20px 0 0;
+}
+
+.block {
+    position: relative;
+    left: 50%;
+    margin: 30px 0 0 -450px;
+    padding: 2% 4% 2% 4%;
+    border-radius: 5px;
+    width: 800px;
+    
+}
+
+.blue {
+    background-color: #cfe6ff;
+    border: 1px solid #83BEFC;
+}
+.orange {
+    background-color: #ffefd0;
+    border: 1px solid #ffdb94;
+}
+
+#holder1 {
+    width: 60px;
+}
+
+#scene {
+    position: absolute;
+    overflow: hidden;
+    z-index: -1;
+    left: -13%;
+    top: -3%;
+    height: 105%;
+    width: 113%;
+}

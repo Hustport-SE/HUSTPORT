@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- 引入外部样式 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='el/lib/theme-chalk/index.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/clip.ico') }}"/>
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+    </style>
+    <title>学委面板 | HUSTPORT</title>
+</head>
+<body>
+    <div id="app" v-cloak>
+        <p id="logo"><a href="{{ url_for('home') }}">HUSTPORT</a></p>
+        <div  style="position: absolute; margin-top: -4%; margin-left: 82%;">
+            <el-button size="small" type="warning" v-if="isManager" icon="el-icon-collection" plain @click="handleHome">回到主页</el-button>
+            <el-button size="small" type="danger" style="margin-left: -1px;" icon="el-icon-right" @click="handleLogout">退出</el-button>
+        </div>
+        <div class="template" id="about">
+            <!-- 个人信息显示栏 -->
+            <el-row type="flex" justify="space-around">
+                <el-col :span="6"><p style="color: #2c3e50; font-family: 'Times New Roman', Times, serif;">学习委员登录状态</p></el-col>
+                <el-col :span="16" style="padding-top: 12px;">
+                    <el-tag effect="plain" type="info">{[ userName ]}</el-tag>
+                    <el-tag effect="plain" type="info">{[ className ]}</el-tag>
+                </el-col>
+                <el-col :span="8" style="padding-top: 12px;">
+                </el-col>
+            </el-row>
+            <!-- 班级名单显示或作业布置面板标签页 -->
+            <el-tabs style="margin-top: 30px;" v-model="activeName" type="border-card" @tab-click="handleClick">
+                <el-tab-pane label="班级名单" name="first">
+                    <el-table :data="tableData" style="width: 100%" :default-sort = "{prop: 'studentId', order: 'ascending'}" height="420px">
+                        <el-table-column prop="studentId" label="学号" sortable width="180"></el-table-column>
+                        <el-table-column prop="name" label="姓名" sortable width="180"></el-table-column>
+                        <el-table-column prop="mail" label="邮箱"></el-table-column>
+                    </el-table>
+                </el-tab-pane>
+                <el-tab-pane label="作业布置" name="second">
+                    <el-col :span="15" style="margin-top: 30px; margin-left: 40px;">
+                        <el-form ref="form" :model="form" label-width="80px" status-icon :rules="rules" style="font-family: baskerville, 'Times New Roman', Times, serif; color: #2c3e50;">
+                            <el-form-item label="作业名称" prop="taskName">
+                                <el-input v-model="form.taskName"></el-input>
+                            </el-form-item>
+                            <el-form-item label="截止时间" prop="deadline">
+                                <div>
+                                    <el-date-picker
+                                        v-model="form.deadline"
+                                        type="date"
+                                        placeholder="选择日期">
+                                    </el-date-picker>
+                                    <el-tag type="info">晚上 11:00</el-tag>
+                                </div>
+                                
+                            </el-form-item>
+                            <el-form-item>
+                                <div>
+                                    <el-tag>作业名称预览</el-tag>&nbsp;&nbsp;&nbsp;&nbsp;{[ className ]}-U201710000-路人甲-{[ form.taskName ]}
+                                </div>
+                            </el-form-item>
+                            <el-form-item style="margin-top: 23px">
+                                <el-button type="primary" @click="handleAssign('form')">确认发布</el-button>
+                            </el-form-item>
+                        </el-form>
+                    </el-col>
+                    
+                </el-tab-pane>
+            </el-tabs>
+        </div>
+        
+    </div>
+    <div class="footer">
+        <p style="color: #666">&copy; 2019 HUSTPORT | <a href="{{ url_for('about') }}">ABOUT US</a></p>
+    </div>
+</body>
+<!-- 引入外部脚本 -->
+<script src="{{ url_for('static', filename='js/vue.js') }}"></script>
+<script src="{{ url_for('static', filename='js/index.js') }}"></script>
+<script src="{{ url_for('static', filename='js/axios.min.js') }}"></script>
+<script>
+    new Vue({
+      el: '#app',
+      delimiters: ['{[', ']}'],  //防止Vue与jinja2冲突而修改Vue语句格式
+      data: function() {
+          return {
+              activeName: 'first',
+              userId: 0,
+              classId: 0,
+              presentTaskSequence: 0,  //当前被处理的作业的序号
+              presentTaskName: "",  //当前被处理的作业名称
+              userName: "",
+              studentId: "",
+              mail: "",
+              className: "",
+              isManager: false,
+              tableData: [],
+              form: {
+                  taskName: "",
+                  deadline: ""
+              },
+              rules: {  //表单填写的验证函数
+                  taskName: [
+                      { required:true, message:"请输入作业名称", trigger:'blur' },
+                      { max: 8, message: '作业名不大于8个字符', trigger: 'blur' }
+                  ],
+                  deadline: [
+                      { required:true, message:"请选择截止日期", trigger:'blur' }
+                  ],
+              }
+          }
+      },
+      methods: {
+          handleHome: function() {  //回到主页按钮处理
+            window.location.href="{{ url_for('home') }}"
+          },
+          handleLogout: function () {  //退出登录按钮处理
+              axios({
+                  method: "delete",
+                  url: "{{ url_for('api_login') }}",
+                  timeout: 5000,
+                  data: {
+                      id: this.userId
+                  }
+              }).then(res => {
+                  status = parseInt(res["status"]);
+                  if (status == 201) {  //退出登录成功
+                    window.location.reload();
+                  }
+              })
+          },
+          handleClick(tab, event) {  //标签页点击按钮处理
+            console.log(tab, event);
+            console.log(this.activeName);
+          },
+          handleAssign: function(formName) {  //布置作业按钮处理
+              var isValidated = false;
+              this.$refs[formName].validate((valid) => {
+                  if (valid) {
+                      isValidated = true;
+                  } else {
+                      console.log('error submit!!');
+                      return false;
+                  }
+              });
+              if(isValidated == false) return false;  //没经过验证则结束函数的执行
+              axios({
+                  method: 'post',
+                  url: "{{ url_for('api_tasks') }}",
+                  timeout: 5000,
+                  data: {
+                    taskName: this.form.taskName,
+                    classId: this.classId,
+                    deadline: this.form.deadline
+                  }
+              }).then(res => {
+                  status = parseInt(res["status"]);
+                  if (status == 201) {  //发布成功
+                    this.$message({
+                        message: '作业发布成功！即将刷新页面…',
+                        type: 'success'
+                    });
+                    setTimeout(function () {window.location.reload();}, 3000);
+                  }
+              });
+          },
+      },
+      created: function () {
+          axios({  //网页初始化时请求当前用户信息
+              method: "get",
+              url: "{{ userAPI }}",  //此处居然不用主机名？
+              timeout: 5000
+          }).then(res => {
+            //   console.log(res);
+              this.userId = res.data["id"];
+              this.classId = res.data["classId"];
+              this.userName = res.data["name"];
+              this.studentId = res.data["studentId"];
+              this.mail = res.data["mail"];
+              this.className = res.data["className"];
+              this.isManager = res.data["isManager"];
+          });
+          axios({
+              method: "get",
+              url: "{{ classAPI }}",
+              timeout: 5000
+          }).then(res => {
+              this.tableData = res.data["users"];
+          })
+          
+      }
+    })
+</script>
+</html>

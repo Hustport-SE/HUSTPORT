@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- 引入外部样式 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='el/lib/theme-chalk/index.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/clip.ico') }}"/>
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+    </style>
+    <title>初始化班级 | HUSTPORT</title>
+</head>
+<body>
+    <div id="app" v-cloak>
+        <p id="logo"><a href="{{ url_for('home') }}">HUSTPORT</a></p>
+        <div  style="position: absolute; margin-top: -4%; margin-left: 82%;">
+            <el-button size="small" type="danger" style="margin-left: -1px;" icon="el-icon-right" @click="handleLogout">退出</el-button>
+        </div>
+        <div class="template" id="about">
+            <!-- 个人信息显示栏 -->
+            <el-row type="flex" justify="space-around">
+                <el-col :span="3"><p style="color: #2c3e50; font-family: 'Times New Roman', Times, serif;">登录状态</p></el-col>
+                <el-col :span="16" style="padding-top: 12px;">
+                    <el-tag effect="plain" type="info">{[ userName ]}</el-tag>
+                    <el-tag effect="plain" type="info">{[ studentId ]}</el-tag>
+                    <el-tag effect="plain" type="info">{[ mail ]}</el-tag>
+                </el-col>
+                <el-col :span="8">
+                </el-col>
+            </el-row>
+            <!-- 初始化班级用户权限选择 -->
+            <el-row>
+                <el-col :span="5">
+                    <p style="padding-top: 20px; font-size: 24px; color: #2c3e50; font-family: 'baskerville', 'Times New Roman', Times, serif;">
+                        初始化班级
+                    </p>
+                </el-col>
+                <el-col :span="3">
+                    <p style="padding-top: 31px; font-size: 18px; color: #2c3e50; font-family: 'baskerville', 'Times New Roman', Times, serif;">
+                        我是学委：
+                    </p>
+                </el-col>
+                <el-col :span="3">
+                    <el-switch style="margin-top: 52px;" v-model="managerSwitch" active-color="#409eff" inactive-color="#ddd"></el-switch>
+                </el-col>
+            </el-row>
+            <div style="position: relative; left: 45%; margin: 0 0 0 -20%; padding: 10% 6% 10% 6%; border: 1px solid #eeeeee; border-radius: 5px; width: 40%;">
+                <!-- 创建班级 -->
+                <div v-if="managerSwitch">
+                    <el-form  ref="form" :model="form" :rules="rules" label-position="left" status-icon>
+                        <el-form-item label="学委密匙" prop="key">
+                            <el-input v-model="form.key" placeholder="班级创建权限认证"></el-input>
+                        </el-form-item>
+                        <el-form-item label="班级简称" prop="className">
+                            <el-input v-model="form.className" placeholder="例如：CS1701"></el-input>
+                        </el-form-item>
+                        <el-form-item style="margin-top: 23px">
+                            <el-button type="primary" @click="handleCreate('form')">创建班级</el-button>
+                        </el-form-item>
+                    </el-form>
+                </div>
+                <!-- 选择加入班级 -->
+                <el-row v-if="!managerSwitch">
+                    <el-col :span="16">
+                        <el-select v-model="presentOption" placeholder="请选择班级">
+                            <el-option v-for="item in options" :key="item.id" :label="item.className" :value="item.id"></el-option>
+                        </el-select>
+                    </el-col>
+                    <el-col :span="6" style="margin-left: 8px;">
+                        <el-tooltip effect="dark" placement="right" content="选中班级后就不能修改了噢">
+                            <el-button type="primary" @click="handleChoice">加入班级</el-button>
+                        </el-tooltip>
+                    </el-col>
+                </el-row>
+            </div>
+        </div>
+        
+    </div>
+    <div class="footer">
+        <p style="color: #666">&copy; 2019 HUSTPORT | <a href="{{ url_for('about') }}">ABOUT US</a></p>
+    </div>
+</body>
+<!-- 引入外部脚本 -->
+<script src="{{ url_for('static', filename='js/vue.js') }}"></script>
+<script src="{{ url_for('static', filename='js/index.js') }}"></script>
+<script src="{{ url_for('static', filename='js/axios.min.js') }}"></script>
+<script>
+    new Vue({
+      el: '#app',
+      delimiters: ['{[', ']}'],  //防止Vue与jinja2冲突而修改Vue语句格式
+      data: function() {
+          return {
+              managerSwitch: false,
+              userId: 0,
+              userName: "",
+              studentId: "",
+              mail: "",
+              form: {
+                  key: "",
+                  className: ""
+              },
+              options: [],  //班级选项
+              presentOption: "",
+              rules: {  //表单填写的验证函数
+                  key: [
+                      { required:true, message:"请输入学委密匙", trigger:'blur' }
+                  ],
+                  className: [
+                      { required:true, message:"请输入班级简称", trigger:'blur' },
+                      { min: 6, max: 10, message: '班级简称长度为 6 到 10 个字符', trigger: 'blur' }
+                  ]
+              }
+          }
+      },
+      methods: {
+          handleChoice: function () {  //处理选择班级
+            const urlString = "{{ url_for('api_classes') }}/" + this.presentOption + "/users";
+            axios({
+                method: "post",
+                url: urlString,
+                timeout: 5000,
+                data: {
+                    id: this.userId
+                }
+            }).then(res => {
+                status = parseInt(res["status"]);
+                if (status == 201) {  //退出登录成功
+                    this.$message({
+                        message: '成功加入班级！即将跳转至主页…',
+                        type: 'success'
+                    });
+                    setTimeout(function() {window.location.href="{{ url_for('home') }}"}, 3000);
+                }
+            })
+          },
+          handleCreate: function(formName) {  //处理选择班级
+            var isValidated = false;
+              this.$refs[formName].validate((valid) => {
+                  if (valid) {
+                      isValidated = true;
+                  } else {
+                      console.log('error submit!!');
+                      return false;
+                  }
+              });
+              if (isValidated == false) return false;  //没经过验证则结束函数的执行
+              if (this.form.key != "helloworld") {
+                this.$message.error('学委密匙错误，请重新输入！');
+              }
+              else {
+                  axios({
+                      method: "post",
+                      url: "{{ url_for('api_classes') }}",
+                      timeout: 5000,
+                      data: {
+                          className: this.form.className,
+                          manageId: this.userId
+                      }
+                  }).then(res => {
+                    status = parseInt(res["status"]);
+                    if (status == 201) {  //创建班级成功
+                        this.$message({
+                            message: '成功创建班级！即将跳转至主页…',
+                            type: 'success'
+                        });
+                        setTimeout(function() {window.location.href="{{ url_for('home') }}"}, 3000);
+                    }
+                  })
+              }
+          },
+          handleHome: function() {  //回到主页按钮处理
+            window.location.href="{{ url_for('home') }}"
+          },
+          handleLogout: function () {  //退出登录按钮处理
+              axios({
+                  method: "delete",
+                  url: "{{ url_for('api_login') }}",
+                  timeout: 5000,
+                  data: {
+                      id: this.userId
+                  }
+              }).then(res => {
+                  status = parseInt(res["status"]);
+                  if (status == 201) {  //退出登录成功
+                    window.location.reload();
+                  }
+              })
+          }
+      },
+      created: function () {
+          axios({  //网页初始化时请求当前用户信息
+              method: "get",
+              url: "{{ userAPI }}",  //此处居然不用主机名？
+              timeout: 5000
+          }).then(res => {
+            //   console.log(res);
+              this.userId = res.data["id"];
+              this.userName = res.data["name"];
+              this.studentId = res.data["studentId"];
+              this.mail = res.data["mail"];
+          });
+          axios({
+              method: "get",
+              url: "{{ classAPI }}",
+              timeout: 5000
+          }).then(res => {
+              this.options = res.data["classes"];
+          })
+          
+      }
+    })
+</script>
+</html>

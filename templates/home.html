@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- 引入外部样式 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='el/lib/theme-chalk/index.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/clip.ico') }}"/>
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+    </style>
+    <title>主页 | HUSTPORT</title>
+</head>
+<body>
+    <div id="app" v-cloak>
+        <p id="logo"><a href="{{ url_for('home') }}">HUSTPORT</a></p>
+        <div  style="position: absolute; margin-top: -4%; margin-left: 82%;">
+            <el-button size="small" type="warning" plain v-if="isManager" icon="el-icon-collection" @click="handleManage">学委面板</el-button>
+            <el-button size="small" type="danger" style="margin-left: -1px;" icon="el-icon-right" @click="handleLogout">退出</el-button>
+        </div>
+        <div class="template" id="about">
+            <!-- 个人信息显示栏 -->
+            <el-row type="flex" justify="space-around">
+                <el-col :span="3"><p style="color: #2c3e50; font-family: 'Times New Roman', Times, serif;">登录状态</p></el-col>
+                <el-col :span="16" style="padding-top: 12px;">
+                    <el-tag effect="plain" type="info">{[ userName ]}</el-tag>
+                    <el-tag effect="plain" type="info">{[ studentId ]}</el-tag>
+                    <el-tag effect="plain" type="info">{[ className ]}</el-tag>
+                    <el-tag effect="plain" type="info">{[ mail ]}</el-tag>
+                </el-col>
+                <el-col :span="8" style="padding-top: 12px;">
+                    <el-button type="primary" size="small" icon="el-icon-edit-outline" plain @click="settingVisible = true">修改信息</el-button>
+                    <el-button type="primary" size="small" icon="el-icon-setting" plain @click="settingPassword = true">重设密码</el-button>
+                </el-col>
+            </el-row>
+            <!-- 个人信息修改对话框 -->
+            <el-dialog class="settingDialog" title="个人信息修改" :visible.sync="settingVisible" width="30%">
+                <el-form ref="form" :model="form" :rules="rules" label-width="80px" size="medium" label-position="right" status-icon>
+                    <el-form-item label="学号" prop="studentId">
+                        <el-col :span="20">
+                            <el-input v-model="form.studentId"></el-input>
+                        </el-col>
+                    </el-form-item>
+                    <el-form-item label="姓名" prop="name">
+                        <el-col :span="20">
+                            <el-input v-model="form.name"></el-input>
+                        </el-col>
+                    </el-form-item>
+                    <el-form-item label="邮箱" prop="mail">
+                        <el-col :span="20">
+                            <el-input v-model="form.mail"></el-input>
+                        </el-col>
+                    </el-form-item>
+                </el-form>
+                <span slot="footer" class="dialog-footer">
+                    <el-button @click="settingVisible = false">取 消</el-button>
+                    <el-button type="primary" @click="handleSetting('form')">确 定</el-button>
+                </span>
+            </el-dialog>
+            <!-- 个人密码修改对话框 -->
+            <el-dialog class="settingDialog" title="重设密码" :visible.sync="settingPassword" width="32%">
+                <el-form ref="form" :model="form" :rules="rules" label-width="110px" size="medium" label-position="right" status-icon>
+                    <el-form-item label="新密码" prop="pass">
+                        <el-col :span="20">
+                            <el-input v-model="form.pass" type='Password'></el-input>
+                        </el-col>
+                    </el-form-item>
+                    <el-form-item label="确认新密码" prop="checkPass">
+                        <el-col :span="20">
+                            <el-input v-model="form.checkPass" type='Password'></el-input>
+                        </el-col>
+                    </el-form-item>
+                </el-form>
+                <span slot="footer" class="dialog-footer">
+                    <el-button @click="settingPassword = false">取 消</el-button>
+                    <el-button type="primary" @click="handlePassword('form')">确 定</el-button>
+                </span>
+            </el-dialog>
+            <p style="padding-top: 20px; font-size: 24px; color: #2c3e50; font-family: 'baskerville', 'Times New Roman', Times, serif;">
+                作业列表
+            </p>
+            <el-table :data="tableData" style="width: 100%">
+                <el-table-column label="序号" width="100">
+                    <template slot-scope="scope">
+                        <span style="margin-left: 10px">{[ scope.row.sequence ]}</span>
+                    </template>
+                </el-table-column>
+                <el-table-column label="作业项目" width="180">
+                    <template slot-scope="scope">
+                        <span>{[ scope.row.taskName ]}</span>
+                    </template>
+                </el-table-column>
+                <el-table-column label="截止时间" width="240">
+                    <template slot-scope="scope">
+                        <span>{[ scope.row.deadline ]} 晚上11:00</span>
+                    </template>
+                </el-table-column>
+                <el-table-column label="提交状态" width="150">
+                    <template slot-scope="scope">
+                        <span>{[ scope.row.statusString ]}</span>
+                    </template>
+                </el-table-column>
+                <el-table-column label="操作">
+                    <template slot-scope="scope">
+                        <!-- 按作业提交情况显示不同的按钮 -->
+                        <el-button v-if="scope.row.isOutdated == true && scope.row.isSubmitted == true" disabled type="info" plain size="mini" >删除</el-button>
+                        <el-button v-if="scope.row.isOutdated == true && scope.row.isSubmitted == false" disabled type="info" plain size="mini" >提交</el-button>
+                        <el-button v-if="scope.row.isOutdated == false && scope.row.isSubmitted == true" type="danger" plain size="mini" @click="handleDelete(scope.row.sequence)">删除</el-button>
+                        <el-button v-if="scope.row.isOutdated == false && scope.row.isSubmitted == false" type="primary" plain size="mini" @click="handleSubmit(scope.row.sequence)">提交</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+            <!-- 作业删除对话框 -->
+            <el-dialog title="确认删除" :visible.sync="deleteVisible" width="32%">
+                <div>确定要删除已经提交的 <el-tag type="danger">{[ presentTaskName ]}</el-tag> 作业文件吗？</div>
+                <span slot="footer" class="dialog-footer">
+                    <el-button plain type="danger" @click="deleteVisible = false">取 消</el-button>
+                    <el-button type="danger" @click="requestDelete">确 定</el-button>
+                </span>
+            </el-dialog>
+            <!-- 作业提交对话框 -->
+            <el-dialog title="作业提交" :visible.sync="submitVisible" width="32%">
+                <div>您正在提交的作业是： <el-tag>{[ presentTaskName ]}</el-tag></div>
+                <el-button type="primary" style="margin-top: 20px;"><i class="el-icon-upload"></i>点击上传</el-button>
+                <span slot="footer" class="dialog-footer">
+                    <el-button @click="submitVisible = false">取 消</el-button>
+                </span>
+            </el-dialog>
+        </div>
+    </div>
+    <div class="footer">
+        <p style="color: #666">&copy; 2019 HUSTPORT | <a href="{{ url_for('about') }}">ABOUT US</a></p>
+    </div>
+</body>
+<!-- 引入外部脚本 -->
+<script src="{{ url_for('static', filename='js/vue.js') }}"></script>
+<script src="{{ url_for('static', filename='js/index.js') }}"></script>
+<script src="{{ url_for('static', filename='js/axios.min.js') }}"></script>
+<script>
+    new Vue({
+      el: '#app',
+      delimiters: ['{[', ']}'],  //防止Vue与jinja2冲突而修改Vue语句格式
+      data: function() {
+          var validatePass = (rule, value, callback) => {  //输入密码验证
+              if (value === '') {
+                  callback(new Error('请输入新密码'));
+              } else {
+                  if (this.form.checkPass !== '') {
+                  this.$refs.form.validateField('checkPass');
+                  }
+                  callback();
+              }
+          };
+          var validatePass2 = (rule, value, callback) => {  //确认密码验证
+              if (value === '') {
+                  callback(new Error('请再次输入新密码'));
+              } else if (value !== this.form.pass) {
+                  callback(new Error('两次输入密码不一致!'));
+              } else {
+                  callback();
+              }
+          };
+          return {
+              settingVisible: false,  //重设信息窗口是否显示
+              settingPassword: false,  //重设密码窗口是否显示
+              deleteVisible: false,  //删除作业窗口是否显示
+              submitVisible: false,  //提交作业窗口是否显示
+              userId: 0,
+              classId: 0,
+              presentTaskSequence: 0,  //当前被处理的作业的序号
+              presentTaskName: "",  //当前被处理的作业名称
+              userName: "",
+              studentId: "",
+              mail: "",
+              className: "",
+              isManager: false,
+              form: {
+                name: "",
+                pass: "",
+                checkPass: "",
+                studentId: "",
+                mail: ""
+              },
+              tableData: [],  //列表显示的数据内容
+              rules: {  //表单填写的验证函数
+                  studentId: [
+                      { min: 10, max: 10, message: '学号长度为 10 个字符', trigger: 'blur' }
+                  ],
+                  pass: [
+                      { required: true, message:"请输入新密码", trigger:'blur' },
+                      { validator: validatePass, trigger: 'blur' }
+                  ],
+                  checkPass: [
+                      { required: true, message:"请确认新密码", trigger:'blur'  },
+                      { validator: validatePass2, trigger: 'blur' }
+                  ],
+                  name: [
+                      { min: 2, max: 5, message: '姓名长度为 2 到 5 个字符', trigger: 'blur' }
+                  ],
+                  mail: [
+                      { type: 'email', message: '请输入正确的邮箱地址', trigger: ['blur', 'change'] }
+                  ]
+              }
+          }
+      },
+      methods: {
+          handleLogout: function () {  //退出登录按钮处理
+              axios({
+                  method: "delete",
+                  url: "{{ url_for('api_login') }}",
+                  timeout: 5000,
+                  data: {
+                      id: this.userId
+                  }
+              }).then(res => {
+                  status = parseInt(res["status"]);
+                  if (status == 201) {  //退出登录成功
+                    window.location.reload();
+                  }
+              })
+          },
+          handleSetting: function (formName) {  //重新设置个人信息表单提交处理
+              var isValidated = false;
+              this.$refs[formName].validate((valid) => {
+                  if (valid) {
+                      isValidated = true;
+                  } else {
+                      console.log('error submit!!');
+                      return false;
+                  }
+              });
+              if(isValidated == false) return false;  //没经过验证则结束函数的执行
+              const urlString = "{{ url_for('api_users') }}" + "/" + this.userId;
+              axios({
+                  method: "put",
+                  url: urlString,
+                  timeout: 5000,
+                  data: {
+                      "name": this.form.name,
+                      "password": this.form.pass,
+                      "mail": this.form.mail,
+                      "studentId": this.form.studentId
+                  }
+              }).then(res => {
+                  status = parseInt(res["status"]);
+                  if (status == 201) {  //更新失败
+                      this.$message.error('你的学号和别人的重复了呢！');
+                      this.form.name = this.userName;
+                      this.form.mail = this.mail;
+                      this.form.studentId = this.studentId;
+                  }
+                  else if (status == 202) {  //个人信息更新成功
+                      this.$message({
+                          message: '个人信息更新成功！即将刷新页面…',
+                          type: 'success'
+                      });
+                      this.settingVisible = false;
+                      setTimeout(function () {window.location.reload();}, 3000);
+                  }
+              })
+          },
+          handlePassword: function (formName) {  //重设密码表单提交处理
+              var isValidated = false;
+              this.$refs[formName].validate((valid) => {
+                  if (valid) {
+                      isValidated = true;
+                  } else {
+                      console.log('error submit!!');
+                      return false;
+                  }
+              });
+              if(isValidated == false) return false;  //没经过验证则结束函数的执行
+              const urlString = "{{ url_for('api_users') }}" + "/" + this.userId;
+              axios({
+                  method: "put",
+                  url: urlString,
+                  timeout: 5000,
+                  data: {
+                      "name": this.form.name,
+                      "password": this.form.pass,
+                      "mail": this.form.mail,
+                      "studentId": this.form.studentId
+                  }
+              }).then(res => {
+                  status = parseInt(res["status"]);
+                  if (status == 201) {  //更新失败
+                      this.$message.error('如果出现这条信息则说明有BUG');
+                  }
+                  else if (status == 202) {
+                      this.$message({
+                          message: '重设密码成功！即将刷新页面…',
+                          type: 'success'
+                      });
+                      this.settingVisible = false;
+                      setTimeout(function () {window.location.reload();}, 3000);
+                  }
+              })
+          },
+          handleDelete: function (sequence) {  //已提交作业删除按钮处理
+              this.presentTaskSequence = sequence;
+              this.presentTaskName = this.tableData[sequence-1]["taskName"];
+              this.deleteVisible = true;
+          },
+          handleSubmit: function (sequence) {  //作业提交按钮处理
+              this.presentTaskSequence = sequence;
+              this.presentTaskName = this.tableData[sequence-1]["taskName"];
+              this.submitVisible = true;
+          },
+          requestDelete: function () {  //作业删除按钮发送请求
+              const deleteAPI = "{{ hostURL }}" + "api/users/" + this.userId + "/tasks/" + this.tableData[this.presentTaskSequence-1]["taskId"];
+              axios({
+                  method: "delete",
+                  url: deleteAPI,
+                  timeout: 5000
+              }).then(res => {
+                  status = parseInt(res["status"]);
+                  if(status == 201) {
+                    this.$message({
+                        message: '删除成功！即将刷新页面…',
+                        type: 'success'
+                    });
+                    setTimeout(function() {window.location.reload()}, 3000);
+                  }
+              })
+          },
+          handleManage: function() {  //进入学委面板按钮处理
+            window.location.href="{{ url_for('manage') }}"
+          }
+      },
+      created: function () {
+          axios({  //网页初始化时请求当前用户信息
+              method: "get",
+              url: "{{ userAPI }}",  //此处居然不用主机名？
+              timeout: 5000
+          }).then(res => {
+            //   console.log(res);
+              this.userId = res.data["id"];
+              this.classId = res.data["classId"];
+              this.userName = res.data["name"];
+              this.studentId = res.data["studentId"];
+              this.mail = res.data["mail"];
+              this.className = res.data["className"];
+              this.isManager = res.data["isManager"];
+              this.form.name = res.data["name"];
+              this.form.studentId = res.data["studentId"];
+              this.form.mail = res.data["mail"];
+          });
+          axios({  //网页初始化时请求作业列表
+              method: "get",
+              url: "{{ taskAPI }}",
+              timeout: 5000
+          }).then(res => {
+              this.tableData = res.data["tasks"];
+              for (var i = 0; i < this.tableData.length; i++) {
+                  if (this.tableData[i]["isOutdated"] == true) this.tableData[i]["statusString"] = "已截止";
+                  else if ( this.tableData[i]["isSubmitted"] == true) this.tableData[i]["statusString"] = "已提交";
+                  else this.tableData[i]["statusString"] = "未提交";
+              }
+          });
+          
+          
+      }
+    })
+</script>
+</html>
