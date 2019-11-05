@@ -193,5 +193,45 @@ def api_users_id_tasks(userId):
 def api_users_id_tasks_id(userId, taskId):
     return "success", 201
 
+@app.route('/api/upload',methods=['POST'])      #用户提交作业到服务器中
+def api_upload():
+    if request.method=='POST':
+        f = request.files['file']
+        userId = request.form.get('userId')
+        gradeId = request.form.get('classId')
+        taskId = request.form.get('taskId')
+        # data=request.get_json()
+        # f = data.get('file')
+        # user_id = data.get('user_id')
+        # grade_id = data.get('grade_id')
+        user = User.query.filter(User.id==userId).first()
+        stu_id = user.stuid
+        # gradeId=user.grade_id
+        base_path = os.path.dirname(__file__)
+        #进行新建文件夹
+        file_path = os.path.join(base_path,'upload_file_dir',gradeId,taskId)
+        folder = os.path.exists(file_path)
+        if not folder:
+            os.makedirs(file_path)
+        #进行文件重命名
+        upload_path1 = os.path.join(base_path,'upload_file_dir',gradeId,taskId,secure_filename(f.filename))
+        upload_path1 = os.path.abspath(upload_path1)
+        (filepath1,tempfilename) = os.path.split(upload_path1)
+        #获得文件扩展名
+        (filename1,extension) = os.path.splitext(tempfilename)
+        upload_path2 = os.path.join(base_path,'upload_file_dir',gradeId,taskId,stu_id +extension)
+        upload_path2 = os.path.abspath(upload_path2)
+        print upload_path2
+        try:
+            os.rename(upload_path1,upload_path2)
+        except Exception as e:
+            print e
+            print 'rename file fail\r\n' 
+        f.save(upload_path2)
+        #更新数据库表单
+        present = Present(task_id=taskId,user_id=userId,present_type=extension)
+        db.session.add(present)
+        db.session.commit()
+        return u"success",201
 if __name__ == '__main__':
     app.run(debug=True)
