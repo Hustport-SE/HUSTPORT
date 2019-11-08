@@ -233,5 +233,51 @@ def api_upload():
         db.session.add(present)
         db.session.commit()
         return u"success",201
+
+        # @app.route('/api/delete/present',methods=['POST'])      # 用户删除已经交的作业 
+# def api_delete_present():
+#     if request.method=='POST':
+#         # f = request.files['file']
+#         userId = request.form.get('userId')
+#         gradeId = request.form.get('classId')
+#         taskId = request.form.get('taskId')
+#         user = User.query.filter(User.id==userId).first()
+#         stu_id = user.stuid
+#         present = Present.query.filter(Present.task_id==taskId,Present.user_id==userId).first()
+#         extension = present.present_type
+#         base_path = os.path.dirname(__file__)
+#         delete_path = os.path.join(base_path,'upload_file_dir',gradeId,taskId,stu_id,extension)
+#         delete_path = os.path.abspath(delete_path)
+#         if(os.path.exists(delete_path)):
+#             os.remove(delete_path)
+#         db.session.delete(present)
+#         db.session.commit()
+#         return "success",201
+
+@app.route('/api/users/<int:userId>/tasks/<int:taskId>', methods=['DELETE']) 
+def api_users_id_tasks_id(userId, taskId):
+    # userId = request.form.get('userId')
+    # gradeId = request.form.get('classId')
+    # taskId = request.form.get('taskId')
+    user = User.query.filter(User.id==userId).first()
+    stu_id = user.stuid
+    gradeId = user.grade_id
+    present = Present.query.filter(Present.task_id==taskId and Present.user_id==userId).first()
+    extension = present.present_type
+    print extension
+    base_path = os.path.dirname(__file__)
+    print base_path
+    delete_path = os.path.join(base_path,'upload_file_dir',str(gradeId),str(taskId),stu_id+extension)
+    # delete_path = os.path.join(base_path,'upload_file_dir',,1,stu_id+extension)    
+    print base_path
+    delete_path = os.path.abspath(delete_path)
+    print delete_path
+    if(os.path.exists(delete_path)):
+        os.remove(delete_path)
+    db.session.delete(present)
+    db.session.commit()
+    return "success", 201
+
+
 if __name__ == '__main__':
     app.run(debug=True)
