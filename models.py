@@ -41,6 +41,7 @@ class Task(db.Model):
     id = db.Column(db.Integer,primary_key=True,autoincrement=True)
     taskname = db.Column(db.String(40), nullable=False)
     deadline = db.Column(db.String(40), nullable=False)
+    issend = db.Column(db.Boolean,default=False)
     # 引入外键grade.id
     grade_id = db.Column(db.Integer,db.ForeignKey('grade.id'))
     # 班级-任务一对多关系
@@ -55,6 +56,7 @@ class Task(db.Model):
 class Present(db.Model):
     __tablename__ = 'present'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    present_type = db.Column(db.String(10),nullable=False) 
     # 引入外键task.id
     task_id = db.Column(db.Integer, db.ForeignKey('task.id'))
     # 引入外键user.id
