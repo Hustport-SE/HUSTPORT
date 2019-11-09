@@ -22,9 +22,9 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 MAIL_SERVER = "smtp.qq.com"
 MAIL_PORT = "587"
 MAIL_USE_TLS = True
-MAIL_USERNAME = "1052503676@qq.com"
-MAIL_PASSWORD = "limsndrbaakrbfhd" #生成的授权码
-MAIL_DEFAULT_SENDER = "1052503676@qq.com"
+MAIL_USERNAME = "xxxxxxxxxxx@qq.com"
+MAIL_PASSWORD = "xxxxxxxxxxx" #生成的授权码
+MAIL_DEFAULT_SENDER = "xxxxxxxxxxx@qq.com"
 
 # class Config(object):  # 创建配置，用类
     # 任务列表
