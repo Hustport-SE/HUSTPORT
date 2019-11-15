@@ -50,10 +50,9 @@
                                 <div>
                                     <el-date-picker
                                         v-model="form.deadline"
-                                        type="date"
-                                        placeholder="选择日期">
+                                        type="datetime"
+                                        placeholder="选择日期时间">
                                     </el-date-picker>
-                                    <el-tag type="info">晚上 11:00</el-tag>
                                 </div>
                                 
                             </el-form-item>
@@ -114,6 +113,14 @@
           }
       },
       methods: {
+          GMTToStr(time){
+              let date = new Date(time)
+              let Str=date.getFullYear() + '-' +
+              (date.getMonth() + 1) + '-' + 
+              date.getDate() + ' ' +
+              date.toTimeString()
+              return Str
+          },
           handleHome: function() {  //回到主页按钮处理
             window.location.href="{{ url_for('home') }}"
           },
@@ -154,7 +161,7 @@
                   data: {
                     taskName: this.form.taskName,
                     classId: this.classId,
-                    deadline: this.form.deadline
+                    deadline: this.GMTToStr(this.form.deadline)
                   }
               }).then(res => {
                   status = parseInt(res["status"]);

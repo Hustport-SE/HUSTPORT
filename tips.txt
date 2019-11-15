@@ -1,0 +1,6 @@
+# 优化了提交作业界面
+# 整合了作业提交和删除功能和邮件发送功能
+# 发现并修改了一些BUG
+Optimized submission job interface
+Integration of job submission and deletion, integration of email sending
+Some bugs found and modified

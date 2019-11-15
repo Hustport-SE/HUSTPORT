@@ -18,7 +18,7 @@ class Grade(db.Model):
 class User(db.Model):
     __tablename__ = 'user'
     id = db.Column(db.Integer,primary_key=True,autoincrement=True)
-    mailaddr = db.Column(db.String(20),nullable=False)
+    mailaddr = db.Column(db.String(30),nullable=False)
     username = db.Column(db.String(50),nullable=False)
     stuid = db.Column(db.String(11), nullable=False)
     password = db.Column(db.String(100),nullable=False)
@@ -41,6 +41,7 @@ class Task(db.Model):
     id = db.Column(db.Integer,primary_key=True,autoincrement=True)
     taskname = db.Column(db.String(40), nullable=False)
     deadline = db.Column(db.String(40), nullable=False)
+    # 标志是否将该任务的所有提交打包后发送给学委，默认无
     issend = db.Column(db.Boolean,default=False)
     # 引入外键grade.id
     grade_id = db.Column(db.Integer,db.ForeignKey('grade.id'))
@@ -56,7 +57,6 @@ class Task(db.Model):
 class Present(db.Model):
     __tablename__ = 'present'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    present_type = db.Column(db.String(10),nullable=False) 
     # 引入外键task.id
     task_id = db.Column(db.Integer, db.ForeignKey('task.id'))
     # 引入外键user.id
@@ -65,6 +65,8 @@ class Present(db.Model):
     user = db.relationship('User', backref=db.backref('presents'))
     # 作业发布-作业提交一对多关系
     task = db.relationship('Task', backref=db.backref('presents'))
+    # 提交作业的扩展名
+    present_type = db.Column(db.String(10),nullable=False) 
 
 
     

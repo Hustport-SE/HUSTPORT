@@ -86,6 +86,7 @@
                 }
             };
             return {
+                registerPassport: true,
                 form: {
                     studentId: '',
                     pass: '',
@@ -154,32 +155,38 @@
                     }
                 });
                 if (isValidated == false) return false; //没经过验证则结束函数的执行
-                axios({
-                    method: 'post',
-                    url: "{{ url_for('api_users') }}",
-                    timeout: 5000,
-                    data: {
-                        studentId: this.form.studentId,
-                        password: this.form.pass,
-                        name: this.form.name,
-                        mail: this.form.mail
-                    }
-                }).then(res => {
-                    status = parseInt(res["status"]);
-                    if (status == 201) { //stuid 重复
-                        this.$message.error('此学号已经被注册，请直接登陆');
-                    } else if (status == 203) { //mailaddr 重复
-                        this.$message.error('此邮箱已经被注册，换一个邮箱试试');
-                    } else if (status == 202) {
-                        this.$message({
-                            message: '恭喜你注册成功！即将跳转至登录页…',
-                            type: 'success'
-                        });
-                        setTimeout(function() {
-                            window.location.href = "{{ url_for('index') }}"
-                        }, 3000);
-                    }
-                });
+                if (this.registerPassport == true) {
+                    console.log("11111");
+                    this.registerPassport = false;
+                    axios({
+                        method: 'post',
+                        url: "{{ url_for('api_users') }}",
+                        timeout: 5000,
+                        data: {
+                            studentId: this.form.studentId,
+                            password: this.form.pass,
+                            name: this.form.name,
+                            mail: this.form.mail
+                        }
+                    }).then(res => {
+                        status = parseInt(res["status"]);
+                        if (status == 201) { //stuid 重复
+                            this.$message.error('此学号已经被注册，请直接登陆');
+                            this.registerPassport = true;
+                        } else if (status == 203) { //mailaddr 重复
+                            this.$message.error('此邮箱已经被注册，换一个邮箱试试');
+                            this.registerPassport = true;
+                        } else if (status == 202) {
+                            this.$message({
+                                message: '恭喜你注册成功！即将跳转至登录页…',
+                                type: 'success'
+                            });
+                            setTimeout(function() {
+                                window.location.href = "{{ url_for('index') }}"
+                            }, 1500);
+                        }
+                    });
+                }
             },
             handleLogin: function() {
                 window.location.href = "{{ url_for('index') }}";

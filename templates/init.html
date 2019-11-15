@@ -93,6 +93,7 @@
       delimiters: ['{[', ']}'],  //防止Vue与jinja2冲突而修改Vue语句格式
       data: function() {
           return {
+              classPassport: true,
               managerSwitch: false,
               userId: 0,
               userName: "",
@@ -118,25 +119,29 @@
       methods: {
           handleChoice: function () {  //处理选择班级
             const urlString = "{{ url_for('api_classes') }}/" + this.presentOption + "/users";
-            axios({
-                method: "post",
-                url: urlString,
-                timeout: 5000,
-                data: {
-                    id: this.userId
-                }
-            }).then(res => {
-                status = parseInt(res["status"]);
-                if (status == 201) {  //退出登录成功
-                    this.$message({
-                        message: '成功加入班级！即将跳转至主页…',
-                        type: 'success'
-                    });
-                    setTimeout(function() {window.location.href="{{ url_for('home') }}"}, 3000);
-                }
-            })
+            if (this.classPassport == true) {
+                this.classPassport = false;
+                axios({
+                    method: "post",
+                    url: urlString,
+                    timeout: 5000,
+                    data: {
+                        id: this.userId
+                    }
+                }).then(res => {
+                    status = parseInt(res["status"]);
+                    if (status == 201) {  //退出登录成功
+                        this.$message({
+                            message: '成功加入班级！即将跳转至主页…',
+                            type: 'success'
+                        });
+                        setTimeout(function() {window.location.href="{{ url_for('home') }}"}, 1500);
+                    }
+                })
+            }
+            
           },
-          handleCreate: function(formName) {  //处理选择班级
+          handleCreate: function(formName) {  //处理创建班级
             var isValidated = false;
               this.$refs[formName].validate((valid) => {
                   if (valid) {
@@ -151,24 +156,28 @@
                 this.$message.error('学委密匙错误，请重新输入！');
               }
               else {
-                  axios({
-                      method: "post",
-                      url: "{{ url_for('api_classes') }}",
-                      timeout: 5000,
-                      data: {
-                          className: this.form.className,
-                          manageId: this.userId
-                      }
-                  }).then(res => {
-                    status = parseInt(res["status"]);
-                    if (status == 201) {  //创建班级成功
-                        this.$message({
-                            message: '成功创建班级！即将跳转至主页…',
-                            type: 'success'
-                        });
-                        setTimeout(function() {window.location.href="{{ url_for('home') }}"}, 3000);
-                    }
-                  })
+                  if (this.classPassport == true) {
+                    this.classPassport = false;
+                    axios({
+                        method: "post",
+                        url: "{{ url_for('api_classes') }}",
+                        timeout: 5000,
+                        data: {
+                            className: this.form.className,
+                            manageId: this.userId
+                        }
+                    }).then(res => {
+                        status = parseInt(res["status"]);
+                        if (status == 201) {  //创建班级成功
+                            this.$message({
+                                message: '成功创建班级！即将跳转至主页…',
+                                type: 'success'
+                            });
+                            setTimeout(function() {window.location.href="{{ url_for('home') }}"}, 1500);
+                        }
+                    })
+                  }
+                  
               }
           },
           handleHome: function() {  //回到主页按钮处理

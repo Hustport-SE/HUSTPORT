@@ -98,7 +98,7 @@
                 </el-table-column>
                 <el-table-column label="截止时间" width="240">
                     <template slot-scope="scope">
-                        <span>{[ scope.row.deadline ]}&nbsp;&nbsp;{[ scope.row.deadlineTime ]}</span>
+                        <span>{[ scope.row.deadline ]} 24:00</span>
                     </template>
                 </el-table-column>
                 <el-table-column label="提交状态" width="150">
@@ -112,7 +112,7 @@
                         <el-button v-if="scope.row.isOutdated == true && scope.row.isSubmitted == true" disabled type="info" plain size="mini" >删除</el-button>
                         <el-button v-if="scope.row.isOutdated == true && scope.row.isSubmitted == false" disabled type="info" plain size="mini" >提交</el-button>
                         <el-button v-if="scope.row.isOutdated == false && scope.row.isSubmitted == true" type="danger" plain size="mini" @click="handleDelete(scope.row.sequence)">删除</el-button>
-                        <el-button v-if="scope.row.isOutdated == false && scope.row.isSubmitted == false" type="primary" plain size="mini" @click="handleSubmit(scope.row.sequence, scope.row.taskId)">提交</el-button>
+                        <el-button v-if="scope.row.isOutdated == false && scope.row.isSubmitted == false" type="primary" plain size="mini" @click="handleSubmit(scope.row.sequence)">提交</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -130,13 +130,7 @@
                 <div>您正在提交的作业是：
                     <el-tag>{[ presentTaskName ]}</el-tag>
                 </div>
-                <el-upload class="upload-demo" drag :http-request="handleUpload" action="{{ api_upload_wrong }}" style="padding-top: 30px; padding-left: 30px;">
-                    <i class="el-icon-upload"></i>
-                    <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
-                    <div class="el-upload__tip" slot="tip">请上传zip/7z/tar文件，最大不超过10MB</div>
-                </el-upload>
-
-                <!-- <el-button type="primary" style="margin-top: 20px;"><i class="el-icon-upload"></i>点击上传</el-button> -->
+                <el-button type="primary" style="margin-top: 20px;"><i class="el-icon-upload"></i>点击上传</el-button>
                 <span slot="footer" class="dialog-footer">
                     <el-button @click="submitVisible = false">取 消</el-button>
                 </span>
@@ -176,11 +170,6 @@
                 }
             };
             return {
-                fullscreenLoading: false,
-                settingPassport: true,
-                passwordPassport: true,
-                deletePassport: true,
-                uploadPassport: true,
                 settingVisible: false, //重设信息窗口是否显示
                 settingPassword: false, //重设密码窗口是否显示
                 deleteVisible: false, //删除作业窗口是否显示
@@ -188,7 +177,6 @@
                 userId: 0,
                 classId: 0,
                 presentTaskSequence: 0, //当前被处理的作业的序号
-                presentTaskId: 0,
                 presentTaskName: "", //当前被处理的作业名称
                 userName: "",
                 studentId: "",
@@ -241,42 +229,6 @@
             }
         },
         methods: {
-            handleUpload: function(param) {
-                console.log("handleUpload");
-                var fileObj = param.file;
-                var form = new FormData();
-                form.append("file", fileObj);
-                form.append("userId", this.userId);
-                form.append("classId", this.classId);
-                form.append("taskId", this.presentTaskId);
-                if (this.uploadPassport == true) {
-                    this.uploadPassport = false;
-                    const loading = this.$loading({
-                        lock: true,
-                        text: '正在上传，请勿刷新或关闭页面',
-                        spinner: 'el-icon-loading',
-                        background: 'rgba(0, 0, 0, 0.7)'
-                    });
-                    axios({
-                        method: 'post',
-                        url: "{{ url_for('api_upload') }}",
-                        headers: {
-                            'Content-Type': 'multipart/form-data'
-                        },
-                        data: form
-                    }).then(res => {
-                        this.submitVisible = false;
-                        loading.close();
-                        this.$message({
-                            message: '上传成功！即将刷新页面…',
-                            type: 'success'
-                        });
-                        setTimeout(function() {
-                            window.location.reload();
-                        }, 1500);
-                    })
-                }
-            },
             handleLogout: function() { //退出登录按钮处理
                 axios({
                     method: "delete",
@@ -304,39 +256,39 @@
                 });
                 if (isValidated == false) return false; //没经过验证则结束函数的执行
                 const urlString = "{{ url_for('api_users') }}" + this.userId;
-                if (this.settingPassport == true) {
-                    this.settingPassport = false;
-                    axios({
-                        method: "put",
-                        url: urlString,
-                        timeout: 5000,
-                        data: {
-                            "name": this.form.name,
-                            "password": this.form.pass,
-                            "mail": this.form.mail,
-                            "studentId": this.form.studentId
-                        }
-                    }).then(res => {
-                        status = parseInt(res["status"]);
-                        if (status == 201) { //更新失败
-                            this.$message.error('你的学号和别人的重复了呢！');
-                            this.form.name = this.userName;
-                            this.form.mail = this.mail;
-                            this.form.studentId = this.studentId;
-                            this.settingPassport = true;
-                        } else if (status == 202) { //个人信息更新成功
-                            this.$message({
-                                message: '个人信息更新成功！即将刷新页面…',
-                                type: 'success'
-                            });
-                            this.settingVisible = false;
-                            setTimeout(function() {
-                                window.location.reload();
-                            }, 1500);
-                        }
-                    })
-                }
-                
+                axios({
+                    method: "put",
+                    url: urlString,
+                    timeout: 5000,
+                    data: {
+                        "name": this.form.name,
+                        "password": this.form.pass,
+                        "mail": this.form.mail,
+                        "studentId": this.form.studentId
+                    }
+                }).then(res => {
+                    status = parseInt(res["status"]);
+                    if (status == 201) { //更新失败
+                        this.$message.error('你的学号和别人的重复了呢！');
+                        this.form.name = this.userName;
+                        this.form.mail = this.mail;
+                        this.form.studentId = this.studentId;
+                    } else if (status == 203) { //更新失败
+                        this.$message.error('你的邮箱和别人的重复了呢！');
+                        this.form.name = this.userName;
+                        this.form.mail = this.mail;
+                        this.form.studentId = this.studentId;
+                    } else if (status == 202) { //个人信息更新成功
+                        this.$message({
+                            message: '个人信息更新成功！即将刷新页面…',
+                            type: 'success'
+                        });
+                        this.settingVisible = false;
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 3000);
+                    }
+                })
             },
             handlePassword: function(formName) { //重设密码表单提交处理
                 var isValidated = false;
@@ -350,70 +302,60 @@
                 });
                 if (isValidated == false) return false; //没经过验证则结束函数的执行
                 const urlString = "{{ url_for('api_users') }}" + this.userId;
-                if (this.passwordPassport == true) {
-                    this.passwordPassport = false;
-                    axios({
-                        method: "put",
-                        url: urlString,
-                        timeout: 5000,
-                        data: {
-                            "name": this.form.name,
-                            "password": this.form.pass,
-                            "mail": this.form.mail,
-                            "studentId": this.form.studentId
-                        }
-                    }).then(res => {
-                        status = parseInt(res["status"]);
-                        if (status == 201) { //更新失败
-                            this.$message.error('如果出现这条信息则说明有BUG');
-                        } else if (status == 202) {
-                            this.$message({
-                                message: '重设密码成功！即将刷新页面…',
-                                type: 'success'
-                            });
-                            this.settingPassword = false;
-                            setTimeout(function() {
-                                window.location.reload();
-                            }, 1500);
-                        }
-                    })
-                }
-                
+                axios({
+                    method: "put",
+                    url: urlString,
+                    timeout: 5000,
+                    data: {
+                        "name": this.form.name,
+                        "password": this.form.pass,
+                        "mail": this.form.mail,
+                        "studentId": this.form.studentId
+                    }
+                }).then(res => {
+                    status = parseInt(res["status"]);
+                    if (status == 201) { //更新失败
+                        this.$message.error('如果出现这条信息则说明有BUG');
+                    } else if (status == 202) {
+                        this.$message({
+                            message: '重设密码成功！即将刷新页面…',
+                            type: 'success'
+                        });
+                        this.settingVisible = false;
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 3000);
+                    }
+                })
             },
             handleDelete: function(sequence) { //已提交作业删除按钮处理
                 this.presentTaskSequence = sequence;
                 this.presentTaskName = this.tableData[sequence - 1]["taskName"];
                 this.deleteVisible = true;
             },
-            handleSubmit: function(sequence, taskId) { //作业提交按钮处理
+            handleSubmit: function(sequence) { //作业提交按钮处理
                 this.presentTaskSequence = sequence;
-                this.presentTaskId = taskId;
                 this.presentTaskName = this.tableData[sequence - 1]["taskName"];
                 this.submitVisible = true;
             },
             requestDelete: function() { //作业删除按钮发送请求
                 const deleteAPI = "{{ hostURL }}" + "api/users/" + this.userId + "/tasks/" + this.tableData[this.presentTaskSequence - 1]["taskId"];
-                if (this.deletePassport == true) {
-                    this.deletePassport = false;
-                    axios({
-                        method: "delete",
-                        url: deleteAPI,
-                        timeout: 5000
-                    }).then(res => {
-                        status = parseInt(res["status"]);
-                        this.deleteVisible = false;
-                        if (status == 201) {
-                            this.$message({
-                                message: '删除成功！即将刷新页面…',
-                                type: 'success'
-                            });
-                            setTimeout(function() {
-                                window.location.reload()
-                            }, 1500);
-                        }
-                    })
-                }
-                
+                axios({
+                    method: "delete",
+                    url: deleteAPI,
+                    timeout: 5000
+                }).then(res => {
+                    status = parseInt(res["status"]);
+                    if (status == 201) {
+                        this.$message({
+                            message: '删除成功！即将刷新页面…',
+                            type: 'success'
+                        });
+                        setTimeout(function() {
+                            window.location.reload()
+                        }, 3000);
+                    }
+                })
             },
             handleManage: function() { //进入学委面板按钮处理
                 window.location.href = "{{ url_for('manage') }}"
@@ -447,10 +389,10 @@
                     if (this.tableData[i]["isOutdated"] == true) this.tableData[i]["statusString"] = "已截止";
                     else if (this.tableData[i]["isSubmitted"] == true) this.tableData[i]["statusString"] = "已提交";
                     else this.tableData[i]["statusString"] = "未提交";
-                    this.tableData[i]["deadlineTime"] = this.tableData[i]["deadline"].substr(11,5)
-                    this.tableData[i]["deadline"] = this.tableData[i]["deadline"].substr(0,10)
                 }
             });
+
+
         }
     })
 </script>
